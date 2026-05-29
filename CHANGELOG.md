@@ -1,3 +1,15 @@
+## 0.2.0
+
+- Add `ThaiAddressAutocompleteField` — a single type-ahead field that resolves a
+  free-text Thai/English name or a postal-code prefix to a full address and
+  commits it to the shared `ThaiAddressController`. Built on Flutter's stock
+  `Autocomplete`; no new dependencies, no code generation.
+- Add `ThaiAddressSuggestion` and `thaiAddressSuggestions(query, {limit})` — the
+  ranked, in-memory suggestion engine behind the field (subdistrict name prefix
+  → contains → district/province expansion, plus 1–5 digit postcode-prefix
+  matching), usable on its own. Each suggestion carries a `display(language)`
+  breadcrumb (Thai uses แขวง/เขต for Bangkok, ตำบล/อำเภอ/จังหวัด elsewhere).
+
 ## 0.1.0
 
 Initial release.
