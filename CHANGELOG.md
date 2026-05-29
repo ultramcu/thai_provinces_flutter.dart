@@ -9,6 +9,17 @@
   → contains → district/province expansion, plus 1–5 digit postcode-prefix
   matching), usable on its own. Each suggestion carries a `display(language)`
   breadcrumb (Thai uses แขวง/เขต for Bangkok, ตำบล/อำเภอ/จังหวัด elsewhere).
+- Add `ThaiPostcodeField` — a postcode-first field. `controller.setPostcode(int)`
+  fills the levels every matching subdistrict shares (a postcode is not 1:1 with
+  a district — ~18% span several districts and a few several provinces) and the
+  subdistrict when 1:1; an inline chooser disambiguates the rest and resolves
+  the full address even when no parent could be pinned.
+- Add the DOPA-codes codec: `ThaiAddressSelection.fromCodes`/`toCodes` (derives
+  missing parents from the deepest code; round-trips), `controller.setFromCodes`,
+  and `ThaiAddressPicker(initialCodes:)` to prefill from stored codes without
+  clobbering a non-empty supplied controller.
+- Docs: add `MIGRATION.md` (migrating from `thai_address_picker`, with a
+  dependency-diff) and a README comparison table + usage sections.
 
 ## 0.1.0
 
