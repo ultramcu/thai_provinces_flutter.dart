@@ -1,0 +1,33 @@
+name: thai_provinces_flutter
+description: >-
+  Cascading Thai address picker widgets (province/district/subdistrict +
+  postcode) for Flutter. No state-management lock-in, no code generation.
+version: 0.1.0
+repository: https://github.com/ultramcu/thai_provinces_flutter.dart
+homepage: https://github.com/ultramcu/thai_provinces_flutter.dart
+issue_tracker: https://github.com/ultramcu/thai_provinces_flutter.dart/issues
+topics:
+  - thailand
+  - address
+  - form
+  - widget
+  - dropdown
+
+environment:
+  # DropdownButtonFormField(initialValue:) was added when `value:` was
+  # deprecated after Flutter v3.33.0-1.0.pre, i.e. it is available from the
+  # 3.35 stable line (Dart 3.9). flutter_lints ^6 also needs Dart >=3.8.
+  sdk: ">=3.9.0 <4.0.0"
+  flutter: ">=3.35.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  thai_provinces: ^0.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
