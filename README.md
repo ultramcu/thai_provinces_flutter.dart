@@ -28,6 +28,24 @@ Most Thai address pickers drag in a state-management framework or a code generat
 
 The core models (`Province`, `District`, `Subdistrict`) and lookup helpers (`provinces()`, `provinceByCode()`, …) are **re-exported**, so a single import gives you everything.
 
+### Comparison
+
+How it compares to [`thai_address_picker`](https://pub.dev/packages/thai_address_picker), the other Flutter Thai-address widget:
+
+| | `thai_provinces_flutter` | `thai_address_picker` |
+| --- | --- | --- |
+| Runtime dependencies | `flutter` + `thai_provinces` only | `flutter` + `flutter_riverpod` + `freezed_annotation` + `json_annotation` |
+| Code generation | none | `build_runner` + `freezed` |
+| State-management lock-in | none (plain `ValueNotifier`) | riverpod (`ProviderScope`) |
+| Cascading picker | yes | yes |
+| Autocomplete / type-ahead | yes | yes |
+| Postcode reverse-lookup | yes | yes |
+| `Form` validation field | yes (`ThaiAddressFormField`) | — |
+| Lat / long coordinates | no | yes |
+| pub points | 160 / 160 *(core data package; this widget package's score builds on it)* | 150 |
+
+Both packages do cascading selection, autocomplete and reverse postcode lookup. The difference is footprint: this package adds **no** state-management framework and **no** codegen step (but carries no lat/long). Migrating? See [MIGRATION.md](MIGRATION.md).
+
 ## Minimal example
 
 A picker inside a `Form`, reporting changes through `onChanged`:
@@ -104,14 +122,123 @@ Form(
 );
 ```
 
+## Autocomplete (type-ahead)
+
+`ThaiAddressAutocompleteField` resolves a free-text query — a Thai or English
+subdistrict / district / province name, or a postcode prefix — to a full
+selection in a single field. Picking a suggestion cascades into the controller,
+so `onChanged` reports the same `ThaiAddressSelection` as the picker does.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:thai_provinces_flutter/thai_provinces_flutter.dart';
+
+class AddressSearch extends StatelessWidget {
+  const AddressSearch({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ThaiAddressAutocompleteField(
+      decoration: const InputDecoration(labelText: 'ค้นหาที่อยู่'),
+      maxOptions: 10,
+      onChanged: (sel) =>
+          debugPrint('${sel.subdistrict?.nameTh} ${sel.postcode}'),
+    );
+  }
+}
+```
+
+## Postcode field (reverse lookup)
+
+`ThaiPostcodeField` is postcode-first: the user types a 5-digit code and the
+address auto-fills as far as the postcode is unambiguous — the province and
+district are set only when *every* matching subdistrict shares them (most
+postcodes do, but ~18% span several districts and a few span several provinces),
+and the subdistrict is filled when the postcode is 1:1. When several
+subdistricts share the code, the field shows an inline chooser so the user picks
+one (resolving the whole address). The same logic is available programmatically
+via `controller.setPostcode(int)`.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:thai_provinces_flutter/thai_provinces_flutter.dart';
+
+class PostcodeEntry extends StatelessWidget {
+  const PostcodeEntry({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ThaiPostcodeField(
+      decoration: const InputDecoration(labelText: 'รหัสไปรษณีย์'),
+      onChanged: (sel) => debugPrint(
+        '${sel.province?.nameTh} / ${sel.district?.nameTh} / '
+        '${sel.subdistrict?.nameTh}',
+      ),
+    );
+  }
+}
+
+// Or drive a controller directly:
+final controller = ThaiAddressController();
+controller.setPostcode(10800); // 1:1 → fills แขวงบางซื่อ, เขตบางซื่อ, กรุงเทพฯ
+controller.setPostcode(50200); // 1 district, 3 subdistricts → province+district
+controller.setPostcode(13240); // spans 2 provinces → nothing pinned; use chooser
+```
+
+## Codes (DOPA geocodes)
+
+Every level carries its official DOPA `code` (province 2-digit, district
+4-digit, subdistrict 6-digit). Store a single integer per level and rebuild the
+selection later with `ThaiAddressSelection.fromCodes` — missing parents are
+derived from the deepest code given. `toCodes()` is the inverse and round-trips.
+
+```dart
+import 'package:thai_provinces_flutter/thai_provinces_flutter.dart';
+
+// Rebuild from a stored subdistrict code; district + province are derived.
+final sel = ThaiAddressSelection.fromCodes(subdistrictCode: 500108);
+// sel.province?.code == 50, sel.district?.code == 5001, sel.postcode == 50200
+
+// Inverse: read the codes back out.
+final (p, d, s) = sel.toCodes(); // (50, 5001, 500108)
+final same = ThaiAddressSelection.fromCodes(
+  provinceCode: p,
+  districtCode: d,
+  subdistrictCode: s,
+);
+assert(same == sel); // round-trips
+
+// On a live controller:
+final controller = ThaiAddressController();
+controller.setFromCodes(subdistrictCode: 500108);
+```
+
+### Seeding a picker with `initialCodes`
+
+Pass stored codes straight to the picker to pre-select an address on first
+build. `initialCodes` is applied once; it never clobbers a supplied controller
+that already holds a non-empty selection.
+
+```dart
+import 'package:thai_provinces_flutter/thai_provinces_flutter.dart';
+
+// (provinceCode, districtCode, subdistrictCode)
+const picker = ThaiAddressPicker(initialCodes: (50, 5001, 500108));
+
+// A deeper-only code works too — parents are derived:
+const fromSub = ThaiAddressPicker(initialCodes: (null, null, 500108));
+```
+
 ## API
 
 | Type | Kind | Purpose |
 | --- | --- | --- |
-| `ThaiAddressPicker` | Widget | Cascading province/district/subdistrict dropdowns + read-only postcode. |
+| `ThaiAddressPicker` | Widget | Cascading province/district/subdistrict dropdowns + read-only postcode. Optional `initialCodes` seed. |
+| `ThaiAddressAutocompleteField` | Widget | Single type-ahead field resolving a free-text name / postcode-prefix query to a full selection. |
+| `ThaiPostcodeField` | Widget | Postcode-first field: 5-digit entry fills the levels the code shares unambiguously, plus an inline subdistrict chooser when several subdistricts match. |
 | `ThaiAddressFormField` | `FormField` | `Form`-integrated picker with `validator` / `onSaved` / error text. |
-| `ThaiAddressController` | `ValueNotifier` | Holds the selection; cascade-clearing, guarded setters (`setProvince` / `setDistrict` / `setSubdistrict` / `clear`). |
-| `ThaiAddressSelection` | Value object | Immutable `{province, district, subdistrict}` snapshot; `postcode`, `isComplete`, `isEmpty`, `copyWith`, `toJson` / `fromJson`, value equality. |
+| `ThaiAddressController` | `ValueNotifier` | Holds the selection; cascade-clearing, guarded setters (`setProvince` / `setDistrict` / `setSubdistrict` / `setPostcode` / `setFromCodes` / `clear`). |
+| `ThaiAddressSelection` | Value object | Immutable `{province, district, subdistrict}` snapshot; `postcode`, `isComplete`, `isEmpty`, `copyWith`, `fromCodes` / `toCodes`, `toJson` / `fromJson`, value equality. |
 | `ThaiAddressLanguage` | Enum | `thai` or `english` — picks which label names render. |
 | `ThaiAddressLanguageLabels` | Extension | `labelOf` / `labelOfDistrict` / `labelOfSubdistrict` helpers. |
 | `Province`, `District`, `Subdistrict` | Re-exported models | From `thai_provinces`. |

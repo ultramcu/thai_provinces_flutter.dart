@@ -99,6 +99,51 @@ class ThaiAddressController extends ValueNotifier<ThaiAddressSelection> {
     );
   }
 
+  /// Sets the selection from a 5-digit postal [postcode].
+  ///
+  /// Resolves via `byPostcode` and pins only the levels the matches AGREE on:
+  /// the province (and district) are set only when every matching subdistrict
+  /// shares it, and the subdistrict is set only when exactly one matches. A
+  /// postcode is not 1:1 with a district — about 18% of Thai postcodes span
+  /// several districts, and a few span several provinces — so an ambiguous
+  /// postcode leaves the unshared levels null for the UI to disambiguate over
+  /// the full candidate set. An unknown postcode clears the selection.
+  void setPostcode(int postcode) {
+    final subs = byPostcode(postcode);
+    if (subs.isEmpty) {
+      clear();
+      return;
+    }
+    final first = subs.first;
+    // Pin a level only when ALL matches agree on it (compare by code).
+    final sharedProvince = subs.every(
+      (s) => s.districtCode ~/ 100 == first.districtCode ~/ 100,
+    );
+    final sharedDistrict = subs.every(
+      (s) => s.districtCode == first.districtCode,
+    );
+    value = ThaiAddressSelection(
+      province: sharedProvince ? first.province : null,
+      district: sharedDistrict ? first.district : null,
+      // Auto-fill the subdistrict only when the postcode is unambiguous.
+      subdistrict: subs.length == 1 ? first : null,
+    );
+  }
+
+  /// Sets the selection from official DOPA codes (see
+  /// [ThaiAddressSelection.fromCodes]). Implemented by the codes dev.
+  void setFromCodes({
+    int? provinceCode,
+    int? districtCode,
+    int? subdistrictCode,
+  }) {
+    value = ThaiAddressSelection.fromCodes(
+      provinceCode: provinceCode,
+      districtCode: districtCode,
+      subdistrictCode: subdistrictCode,
+    );
+  }
+
   /// Clears the entire selection.
   void clear() {
     if (value.isEmpty) return;

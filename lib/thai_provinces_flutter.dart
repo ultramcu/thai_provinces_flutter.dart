@@ -25,6 +25,7 @@ export 'src/controller.dart' show ThaiAddressController;
 export 'src/form_field.dart' show ThaiAddressFormField;
 export 'src/language.dart' show ThaiAddressLanguage, ThaiAddressLanguageLabels;
 export 'src/picker.dart' show ThaiAddressPicker;
+export 'src/postcode_field.dart' show ThaiPostcodeField;
 export 'src/selection.dart' show ThaiAddressSelection;
 export 'src/suggestions.dart'
     show ThaiAddressSuggestion, thaiAddressSuggestions;

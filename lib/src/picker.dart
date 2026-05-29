@@ -32,6 +32,7 @@ class ThaiAddressPicker extends StatefulWidget {
     this.districtLabel,
     this.subdistrictLabel,
     this.postcodeLabel,
+    this.initialCodes,
   });
 
   /// The controller holding the current selection. If `null`, the widget
@@ -73,6 +74,14 @@ class ThaiAddressPicker extends StatefulWidget {
   /// Optional label for the postcode field.
   final String? postcodeLabel;
 
+  /// Optional initial selection given as official DOPA codes
+  /// `(provinceCode, districtCode, subdistrictCode)`; applied once when the
+  /// widget is first created via [ThaiAddressSelection.fromCodes]. Ignored when
+  /// a [controller] is supplied that already holds a non-empty selection.
+  /// Wired by the picker-integration dev.
+  final (int? provinceCode, int? districtCode, int? subdistrictCode)?
+  initialCodes;
+
   @override
   State<ThaiAddressPicker> createState() => _ThaiAddressPickerState();
 }
@@ -100,7 +109,26 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
       _controller = external;
       _ownsController = false;
     }
+    _maybeSeedInitialCodes();
     _controller.addListener(_onControllerChanged);
+  }
+
+  /// Applies [ThaiAddressPicker.initialCodes] to the controller exactly once,
+  /// at attach time, when it is non-null and the controller currently holds an
+  /// empty selection. This seeds the internal controller, or a supplied
+  /// controller that is still empty, while never clobbering a supplied
+  /// controller that already holds a non-empty selection. Seeded before the
+  /// listener is added so it does not fire [ThaiAddressPicker.onChanged] during
+  /// [initState].
+  void _maybeSeedInitialCodes() {
+    final codes = widget.initialCodes;
+    if (codes == null || !_controller.value.isEmpty) return;
+    final (provinceCode, districtCode, subdistrictCode) = codes;
+    _controller.value = ThaiAddressSelection.fromCodes(
+      provinceCode: provinceCode,
+      districtCode: districtCode,
+      subdistrictCode: subdistrictCode,
+    );
   }
 
   void _detach() {

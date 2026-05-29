@@ -86,6 +86,54 @@ class ThaiAddressSelection {
     );
   }
 
+  /// Builds a selection from official DOPA codes by looking each present code
+  /// up in the embedded dataset (`provinceByCode`/`districtByCode`/
+  /// `subdistrictByCode`). When a parent code is omitted but a deeper code is
+  /// given, the missing parents are derived from the deepest code, so
+  /// `ThaiAddressSelection.fromCodes(subdistrictCode: 500108)` yields a full
+  /// selection. An unknown code becomes `null` at that level. Implemented by
+  /// the codes dev.
+  factory ThaiAddressSelection.fromCodes({
+    int? provinceCode,
+    int? districtCode,
+    int? subdistrictCode,
+  }) {
+    // Resolve the deepest level given, then derive any missing parents from it.
+    // A missing parent is filled only from a *resolved* child (never fabricated
+    // from a null lookup). An explicitly-given parent code, if present, still
+    // governs its own level (so an unknown given code stays null even if a
+    // child would have implied a value — the given code "wins" at its level).
+    final subdistrict = subdistrictCode == null
+        ? null
+        : subdistrictByCode(subdistrictCode);
+
+    // District: prefer the resolved subdistrict's district; otherwise resolve
+    // the given district code (if any).
+    District? district = subdistrict?.district;
+    if (district == null && districtCode != null) {
+      district = districtByCode(districtCode);
+    }
+
+    // Province: prefer the resolved subdistrict's/district's province; else the
+    // given province code (if any).
+    Province? province = subdistrict?.province ?? district?.province;
+    if (province == null && provinceCode != null) {
+      province = provinceByCode(provinceCode);
+    }
+
+    return ThaiAddressSelection(
+      province: province,
+      district: district,
+      subdistrict: subdistrict,
+    );
+  }
+
+  /// The `(provinceCode, districtCode, subdistrictCode)` of this selection;
+  /// each element is `null` where that level is unset. Round-trips with
+  /// [ThaiAddressSelection.fromCodes]. Implemented by the codes dev.
+  (int? provinceCode, int? districtCode, int? subdistrictCode) toCodes() =>
+      (province?.code, district?.code, subdistrict?.code);
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
