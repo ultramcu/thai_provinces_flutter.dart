@@ -1,3 +1,16 @@
+## 0.6.0
+
+- Add `ThaiAddressSearchField` — a single-line address field that opens a
+  full-screen, search-as-you-type picker on tap: type a Thai/English name or a
+  postcode and pick a ranked breadcrumb result; the pick commits to the
+  controller (cancel leaves it untouched). The "search your address" pattern,
+  good for address books and dense forms.
+- Add `showThaiAddressSearch(context, {language, searchHint})` — the imperative
+  full-screen search behind the field (a `SearchDelegate` over the package's
+  `thaiAddressSuggestions` engine), usable on its own; returns the chosen
+  `ThaiAddressSelection` or `null` if dismissed. Built on stock `showSearch`; no
+  new dependencies.
+
 ## 0.5.0
 
 - Add `ThaiAddressSheetField` — a compact, single-line address field for dense
