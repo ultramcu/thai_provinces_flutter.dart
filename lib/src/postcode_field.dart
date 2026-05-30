@@ -233,6 +233,7 @@ class _ThaiPostcodeFieldState extends State<ThaiPostcodeField> {
             controller: _textController,
             enabled: widget.enabled,
             keyboardType: TextInputType.number,
+            autofillHints: const [AutofillHints.postalCode],
             maxLength: 5,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,

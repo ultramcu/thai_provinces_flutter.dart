@@ -24,11 +24,18 @@ export 'src/autocomplete_field.dart' show ThaiAddressAutocompleteField;
 export 'src/controller.dart' show ThaiAddressController;
 export 'src/form_field.dart' show ThaiAddressFormField;
 export 'src/language.dart' show ThaiAddressLanguage, ThaiAddressLanguageLabels;
-export 'src/picker.dart' show ThaiAddressPicker;
+export 'src/picker.dart'
+    show
+        ThaiAddressPicker,
+        ThaiAddressLevel,
+        ThaiAddressFieldScope,
+        ThaiAddressFieldBuilder,
+        ThaiAddressLabelBuilder;
 export 'src/postcode_field.dart' show ThaiPostcodeField;
 export 'src/selection.dart' show ThaiAddressSelection;
 export 'src/suggestions.dart'
     show ThaiAddressSuggestion, thaiAddressSuggestions;
+export 'src/validators.dart' show ThaiAddressValidators;
 
 // Re-export the core library so consumers get Province/District/Subdistrict
 // (and the data/lookup helpers) without a second import.

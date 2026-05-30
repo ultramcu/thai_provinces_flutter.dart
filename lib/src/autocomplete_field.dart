@@ -166,6 +166,20 @@ class _ThaiAddressAutocompleteFieldState
       (widget.optionsBuilder ??
       (q) => thaiAddressSuggestions(q, limit: widget.maxOptions))(query);
 
+  /// The accessibility label announced for the search field.
+  ///
+  /// Honors an explicit `labelText`/`hintText` from the caller's [decoration];
+  /// otherwise falls back to a language-appropriate default so screen readers
+  /// always have something meaningful to announce.
+  String get _semanticsLabel {
+    final decoration = widget.decoration;
+    return decoration.labelText ?? decoration.hintText ?? _defaultLabel;
+  }
+
+  String get _defaultLabel => widget.language == ThaiAddressLanguage.thai
+      ? 'ค้นหาที่อยู่'
+      : 'Search address';
+
   /// Commits a picked suggestion to the controller parent-first, so the
   /// cascade-consistency guards on the setters always pass.
   void _onSelected(ThaiAddressSuggestion suggestion) {
@@ -197,13 +211,18 @@ class _ThaiAddressAutocompleteFieldState
                 if (mounted) _syncFieldText();
               });
             }
-            return TextField(
-              key: const Key('thaiAddress.autocomplete'),
-              controller: textEditingController,
-              focusNode: focusNode,
-              enabled: widget.enabled,
-              decoration: widget.decoration,
-              onSubmitted: (_) => onFieldSubmitted(),
+            return Semantics(
+              textField: true,
+              label: _semanticsLabel,
+              child: TextField(
+                key: const Key('thaiAddress.autocomplete'),
+                controller: textEditingController,
+                focusNode: focusNode,
+                enabled: widget.enabled,
+                autofillHints: const [AutofillHints.fullStreetAddress],
+                decoration: widget.decoration,
+                onSubmitted: (_) => onFieldSubmitted(),
+              ),
             );
           },
     );
