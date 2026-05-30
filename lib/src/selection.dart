@@ -1,5 +1,7 @@
 import 'package:thai_provinces/thai_provinces.dart';
 
+import 'language.dart';
+
 /// An immutable snapshot of a (possibly partial) Thai address selection:
 /// a [province], its [district] and that district's [subdistrict].
 ///
@@ -134,6 +136,62 @@ class ThaiAddressSelection {
   (int? provinceCode, int? districtCode, int? subdistrictCode) toCodes() =>
       (province?.code, district?.code, subdistrict?.code);
 
+  /// A printable postal-order address string for the levels that are set.
+  ///
+  /// Thai ([ThaiAddressLanguage.thai]) joins subdistrict → district → province
+  /// with the correct prefixes: Bangkok (province code 10) uses แขวง for the
+  /// subdistrict and the district/province names verbatim (they already read
+  /// เขต…/กรุงเทพมหานคร), while elsewhere it is ตำบล…/อำเภอ…/จังหวัด…. English
+  /// ([ThaiAddressLanguage.english]) joins the romanized names with commas. The
+  /// 5-digit postcode is appended when [includePostcode] is true and a
+  /// subdistrict is set. A partial selection formats only the set levels; an
+  /// empty selection returns an empty string. Implemented by the dev.
+  String format({
+    ThaiAddressLanguage language = ThaiAddressLanguage.thai,
+    bool includePostcode = true,
+  }) {
+    // Bangkok detection from the deepest available level's province code.
+    final provinceCode =
+        province?.code ??
+        district?.provinceCode ??
+        (subdistrict != null ? subdistrict!.districtCode ~/ 100 : null);
+    final isBangkok = provinceCode == _bangkokCode;
+
+    final parts = <String>[];
+    if (language == ThaiAddressLanguage.english) {
+      if (subdistrict != null) parts.add(subdistrict!.nameEn);
+      if (district != null) parts.add(district!.nameEn);
+      if (province != null) parts.add(province!.nameEn);
+      var out = parts.join(', ');
+      if (includePostcode && subdistrict != null) {
+        out = out.isEmpty
+            ? '${subdistrict!.postcode}'
+            : '$out ${subdistrict!.postcode}';
+      }
+      return out;
+    }
+
+    // Thai.
+    if (subdistrict != null) {
+      parts.add('${isBangkok ? 'แขวง' : 'ตำบล'}${subdistrict!.nameTh}');
+    }
+    if (district != null) {
+      // Bangkok district names already carry the "เขต" prefix in the dataset.
+      parts.add(isBangkok ? district!.nameTh : 'อำเภอ${district!.nameTh}');
+    }
+    if (province != null) {
+      // The Bangkok province name is "กรุงเทพมหานคร" and is used verbatim.
+      parts.add(isBangkok ? province!.nameTh : 'จังหวัด${province!.nameTh}');
+    }
+    var out = parts.join(' ');
+    if (includePostcode && subdistrict != null) {
+      out = out.isEmpty
+          ? '${subdistrict!.postcode}'
+          : '$out ${subdistrict!.postcode}';
+    }
+    return out;
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -150,3 +208,6 @@ class ThaiAddressSelection {
       'ThaiAddressSelection(province: $province, district: $district, '
       'subdistrict: $subdistrict)';
 }
+
+/// Province code of Bangkok (กรุงเทพมหานคร), which uses แขวง/เขต wording.
+const int _bangkokCode = 10;

@@ -1,3 +1,11 @@
+## 0.3.0
+
+- Add `ThaiAddressSelection.format({language, includePostcode})` — a one-call
+  printable postal-order address string. Thai uses the correct prefixes (แขวง +
+  verbatim เขต…/กรุงเทพมหานคร for Bangkok; ตำบล/อำเภอ/จังหวัด elsewhere); English
+  joins the romanized names with commas. Formats partial selections (only the
+  set levels) and returns `''` for an empty selection.
+
 ## 0.2.2
 
 - Add an example **gallery** app (every form-factor on one shared controller

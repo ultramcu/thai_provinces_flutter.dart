@@ -59,7 +59,8 @@ void main() {
       expect(findTextContaining('picker'), findsWidgets,
           reason: 'gallery should label the ThaiAddressPicker section');
       expect(findTextContaining('autocomplete'), findsWidgets,
-          reason: 'gallery should label the ThaiAddressAutocompleteField section');
+          reason:
+              'gallery should label the ThaiAddressAutocompleteField section');
       expect(findTextContaining('postcode'), findsWidgets,
           reason: 'gallery should label the ThaiPostcodeField section');
 
@@ -99,7 +100,8 @@ void main() {
       // the key 'thaiAddress.province'; scope to the first so the tap is
       // deterministic. The gallery scrolls, so bring it on-screen before
       // tapping, then select a real province.
-      final provinceDropdown = find.byKey(const Key('thaiAddress.province')).first;
+      final provinceDropdown =
+          find.byKey(const Key('thaiAddress.province')).first;
       await tester.ensureVisible(provinceDropdown);
       await tester.pumpAndSettle();
       await tester.tap(provinceDropdown);

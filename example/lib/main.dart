@@ -126,8 +126,7 @@ class GalleryHome extends StatelessWidget {
             _DemoCard(
               index: 1,
               title: _isThai ? 'ตัวเลือกแบบลำดับชั้น' : 'Cascading picker',
-              description:
-                  'ThaiAddressPicker — three dependent dropdowns '
+              description: 'ThaiAddressPicker — three dependent dropdowns '
                   '(province → district → subdistrict) plus an auto-filled '
                   'postcode field.',
               child: ThaiAddressPicker(
@@ -364,7 +363,8 @@ class _FormDemoState extends State<_FormDemo> {
     if (form.validate()) {
       form.save();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_isThai ? 'บันทึกที่อยู่แล้ว' : 'Address saved')),
+        SnackBar(
+            content: Text(_isThai ? 'บันทึกที่อยู่แล้ว' : 'Address saved')),
       );
     } else {
       setState(() => _saved = null);
@@ -440,8 +440,8 @@ class _SelectionPanel extends StatelessWidget {
     return ValueListenableBuilder<ThaiAddressSelection>(
       valueListenable: controller,
       builder: (context, selection, _) {
-        final json = const JsonEncoder.withIndent('  ')
-            .convert(selection.toJson());
+        final json =
+            const JsonEncoder.withIndent('  ').convert(selection.toJson());
         return Card(
           elevation: 0,
           color: theme.colorScheme.surfaceContainerHighest,
@@ -549,8 +549,8 @@ class _SelectionPanel extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
           ),
           Expanded(
