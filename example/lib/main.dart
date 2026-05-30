@@ -26,7 +26,7 @@ class _ExampleAppState extends State<ExampleApp> {
   // outlives tab switches and stays the single source of truth.
   final ThaiAddressController _controller = ThaiAddressController();
 
-  // A TH/EN toggle that flows into every demo's `language:`.
+  // A Thai → English → bilingual toggle that flows into every demo's `language:`.
   ThaiAddressLanguage _language = ThaiAddressLanguage.thai;
 
   @override
@@ -37,9 +37,8 @@ class _ExampleAppState extends State<ExampleApp> {
 
   void _toggleLanguage() {
     setState(() {
-      _language = _language == ThaiAddressLanguage.thai
-          ? ThaiAddressLanguage.english
-          : ThaiAddressLanguage.thai;
+      _language = ThaiAddressLanguage
+          .values[(_language.index + 1) % ThaiAddressLanguage.values.length];
     });
   }
 
@@ -98,7 +97,11 @@ class GalleryHome extends StatelessWidget {
           TextButton.icon(
             onPressed: onToggleLanguage,
             icon: const Icon(Icons.translate),
-            label: Text(_isThai ? 'TH' : 'EN'),
+            label: Text(switch (language) {
+              ThaiAddressLanguage.thai => 'TH',
+              ThaiAddressLanguage.english => 'EN',
+              ThaiAddressLanguage.bilingual => 'TH+EN',
+            }),
           ),
           IconButton(
             tooltip: 'Clear selection',
@@ -205,6 +208,33 @@ class GalleryHome extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w600),
                 icon: const Icon(Icons.expand_more),
                 menuMaxHeight: 320,
+              ),
+            ),
+            _DemoCard(
+              index: 7,
+              title: _isThai ? 'ฟิลด์แบบ bottom-sheet' : 'Bottom-sheet field',
+              description:
+                  'ThaiAddressSheetField — a compact one-line summary that '
+                  'opens a modal bottom-sheet picker on tap; confirm commits, '
+                  'cancel leaves the selection untouched. Great for dense '
+                  'checkout forms.',
+              child: ThaiAddressSheetField(
+                controller: controller,
+                language: language,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+              ),
+            ),
+            _DemoCard(
+              index: 8,
+              title: _isThai ? 'ฟิลด์ค้นหาเต็มจอ' : 'Full-screen search field',
+              description:
+                  'ThaiAddressSearchField — tap to open a full-screen, '
+                  'search-as-you-type picker; pick a ranked result and it '
+                  'commits to the shared controller.',
+              child: ThaiAddressSearchField(
+                controller: controller,
+                language: language,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
               ),
             ),
           ];
@@ -523,6 +553,14 @@ class _SelectionPanel extends StatelessWidget {
                   context,
                   _isThai ? 'รหัสไปรษณีย์' : 'Postcode',
                   selection.postcode?.toString() ?? '—',
+                ),
+                const SizedBox(height: 12),
+                _row(
+                  context,
+                  'format()',
+                  selection.isEmpty
+                      ? '—'
+                      : selection.format(language: language),
                 ),
                 const SizedBox(height: 16),
                 Text(
