@@ -19,7 +19,7 @@ This pulls in exactly two things: `flutter` and the [`thai_provinces`](https://p
 
 ## Why this package
 
-Most Thai address pickers drag in a state-management framework or a code generator. This one does **neither**:
+A drop-in Thai address picker with a deliberately small footprint:
 
 - **No state-management lock-in** — no provider / riverpod / bloc. Selection state lives in a plain `ValueNotifier` (`ThaiAddressController`). Use it with whatever you already use.
 - **No code generation** — no freezed / json_serializable / build_runner. Just import and run.
@@ -28,23 +28,17 @@ Most Thai address pickers drag in a state-management framework or a code generat
 
 The core models (`Province`, `District`, `Subdistrict`) and lookup helpers (`provinces()`, `provinceByCode()`, …) are **re-exported**, so a single import gives you everything.
 
-### Comparison
+### At a glance
 
-How it compares to [`thai_address_picker`](https://pub.dev/packages/thai_address_picker), the other Flutter Thai-address widget:
-
-| | `thai_provinces_flutter` | `thai_address_picker` |
-| --- | --- | --- |
-| Runtime dependencies | `flutter` + `thai_provinces` only | `flutter` + `flutter_riverpod` + `freezed_annotation` + `json_annotation` |
-| Code generation | none | `build_runner` + `freezed` |
-| State-management lock-in | none (plain `ValueNotifier`) | riverpod (`ProviderScope`) |
-| Cascading picker | yes | yes |
-| Autocomplete / type-ahead | yes | yes |
-| Postcode reverse-lookup | yes | yes |
-| `Form` validation field | yes (`ThaiAddressFormField`) | — |
-| Lat / long coordinates | no | yes |
-| pub points | 160 / 160 *(core data package; this widget package's score builds on it)* | 150 |
-
-Both packages do cascading selection, autocomplete and reverse postcode lookup. The difference is footprint: this package adds **no** state-management framework and **no** codegen step (but carries no lat/long). Migrating? See [MIGRATION.md](MIGRATION.md).
+| Capability | `thai_provinces_flutter` |
+| --- | --- |
+| Cascading province → district → subdistrict picker | `ThaiAddressPicker` |
+| Single type-ahead field | `ThaiAddressAutocompleteField` |
+| Postcode reverse-lookup | `ThaiPostcodeField` / `controller.setPostcode` |
+| `Form` validation field | `ThaiAddressFormField` |
+| Runtime dependencies | `flutter` + `thai_provinces` only |
+| Code generation | none |
+| State-management lock-in | none (plain `ValueNotifier`) |
 
 ## Minimal example
 

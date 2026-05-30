@@ -1,3 +1,9 @@
+## 0.2.1
+
+- Docs only: the README now presents this package's own capabilities (the
+  "At a glance" table lists only this package; the third-party comparison and
+  migration guide were removed). No code changes.
+
 ## 0.2.0
 
 - Add `ThaiAddressAutocompleteField` — a single type-ahead field that resolves a
@@ -18,8 +24,7 @@
   missing parents from the deepest code; round-trips), `controller.setFromCodes`,
   and `ThaiAddressPicker(initialCodes:)` to prefill from stored codes without
   clobbering a non-empty supplied controller.
-- Docs: add `MIGRATION.md` (migrating from `thai_address_picker`, with a
-  dependency-diff) and a README comparison table + usage sections.
+- Docs: README usage sections for the new APIs.
 
 ## 0.1.0
 
