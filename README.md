@@ -9,6 +9,10 @@ Cascading Thai address picker widgets — จังหวัด → อำเภ
 
 A drop-in province → district → subdistrict picker that auto-fills the postcode, speaks Thai or English, and plugs straight into a Flutter `Form`.
 
+**▶ [Live demo](https://ultramcu.github.io/thai_provinces_flutter.dart/)** — every widget in this package, running in your browser.
+
+![The example gallery: cascading picker, type-ahead field and postcode-first field with a live selection readout](screenshots/gallery-desktop.png)
+
 ## Install
 
 ```sh

@@ -1,3 +1,11 @@
+## 0.2.2
+
+- Add an example **gallery** app (every form-factor on one shared controller
+  with a live selection readout) and a **live web demo** deployed to GitHub
+  Pages: https://ultramcu.github.io/thai_provinces_flutter.dart/
+- Add `screenshots:` to the package (shown on pub.dev) and a screenshot + demo
+  link in the README. No library code changes.
+
 ## 0.2.1
 
 - Docs only: the README now presents this package's own capabilities (the

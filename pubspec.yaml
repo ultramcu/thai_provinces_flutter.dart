@@ -2,7 +2,7 @@ name: thai_provinces_flutter
 description: >-
   Cascading Thai address picker widgets (province/district/subdistrict +
   postcode) for Flutter. No state-management lock-in, no code generation.
-version: 0.2.1
+version: 0.2.2
 repository: https://github.com/ultramcu/thai_provinces_flutter.dart
 homepage: https://github.com/ultramcu/thai_provinces_flutter.dart
 issue_tracker: https://github.com/ultramcu/thai_provinces_flutter.dart/issues
@@ -12,6 +12,13 @@ topics:
   - form
   - widget
   - dropdown
+screenshots:
+  - description: >-
+      Example gallery: cascading picker, type-ahead and postcode-first fields,
+      with a live selection readout.
+    path: screenshots/gallery-desktop.png
+  - description: The gallery on a narrow (mobile) layout.
+    path: screenshots/gallery-mobile.png
 
 environment:
   # DropdownButtonFormField(initialValue:) was added when `value:` was
