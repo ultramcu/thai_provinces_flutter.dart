@@ -1,3 +1,11 @@
+## 0.6.1
+
+- Docs: cite the source dataset — the Department of Provincial Administration
+  (กรมการปกครอง, DOPA) data published on
+  [data.go.th](https://data.go.th/dataset/item_c6d42e1b-3219-47e1-b6b7-dfe914f27910)
+  (via the `thai_provinces` core) — in the DOPA-geocodes section. No code
+  changes.
+
 ## 0.6.0
 
 - Add `ThaiAddressSearchField` — a single-line address field that opens a
