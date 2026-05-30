@@ -8,7 +8,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:thai_provinces_flutter/thai_provinces_flutter.dart';
+// Use `show` so the re-exported Province/District/Subdistrict symbols don't
+// clash with the ones thai_provinces_flutter already re-exports.
+import 'package:thai_provinces_geo/thai_provinces_geo.dart' show reverseGeocode;
 
 void main() => runApp(const ExampleApp());
 
@@ -37,8 +42,9 @@ class _ExampleAppState extends State<ExampleApp> {
 
   void _toggleLanguage() {
     setState(() {
-      _language = ThaiAddressLanguage
-          .values[(_language.index + 1) % ThaiAddressLanguage.values.length];
+      _language =
+          ThaiAddressLanguage.values[(_language.index + 1) %
+              ThaiAddressLanguage.values.length];
     });
   }
 
@@ -129,7 +135,8 @@ class GalleryHome extends StatelessWidget {
             _DemoCard(
               index: 1,
               title: _isThai ? 'ตัวเลือกแบบลำดับชั้น' : 'Cascading picker',
-              description: 'ThaiAddressPicker — three dependent dropdowns '
+              description:
+                  'ThaiAddressPicker — three dependent dropdowns '
                   '(province → district → subdistrict) plus an auto-filled '
                   'postcode field.',
               child: ThaiAddressPicker(
@@ -152,9 +159,10 @@ class GalleryHome extends StatelessWidget {
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.search),
-                  hintText: _isThai
-                      ? 'พิมพ์ตำบล/อำเภอ/จังหวัด/รหัสไปรษณีย์'
-                      : 'Type a subdistrict / district / province / postcode',
+                  hintText:
+                      _isThai
+                          ? 'พิมพ์ตำบล/อำเภอ/จังหวัด/รหัสไปรษณีย์'
+                          : 'Type a subdistrict / district / province / postcode',
                 ),
               ),
             ),
@@ -195,7 +203,8 @@ class GalleryHome extends StatelessWidget {
             _DemoCard(
               index: 6,
               title: _isThai ? 'ปรับแต่งสไตล์' : 'Styled passthrough',
-              description: 'The same ThaiAddressPicker with the direct styling '
+              description:
+                  'The same ThaiAddressPicker with the direct styling '
                   'passthrough: a teal dropdownColor, a rounded borderRadius, a '
                   'bold selected-item style and a custom expand icon — no '
                   'fieldBuilder needed.',
@@ -237,6 +246,16 @@ class GalleryHome extends StatelessWidget {
                 decoration: const InputDecoration(border: OutlineInputBorder()),
               ),
             ),
+            _DemoCard(
+              index: 9,
+              title: _isThai ? 'แผนที่ปักหมุด' : 'Map pin picker',
+              description:
+                  'Tap anywhere on the map; the point is reverse-geocoded '
+                  '(offline, via thai_provinces_geo) to the nearest Thai '
+                  'subdistrict and committed to the SAME shared controller — so '
+                  'the readout and every other demo update in sync.',
+              child: _MapPickerDemo(controller: controller, language: language),
+            ),
           ];
 
           // A Column inside a SingleChildScrollView mounts every demo eagerly
@@ -272,11 +291,7 @@ class GalleryHome extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                readout,
-                const SizedBox(height: 16),
-                ...demos,
-              ],
+              children: [readout, const SizedBox(height: 16), ...demos],
             ),
           );
         },
@@ -412,7 +427,8 @@ class _FormDemoState extends State<_FormDemo> {
       form.save();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(_isThai ? 'บันทึกที่อยู่แล้ว' : 'Address saved')),
+          content: Text(_isThai ? 'บันทึกที่อยู่แล้ว' : 'Address saved'),
+        ),
       );
     } else {
       setState(() => _saved = null);
@@ -467,6 +483,156 @@ class _FormDemoState extends State<_FormDemo> {
   }
 }
 
+/// Demo (9): a tap-to-pick map. Tapping reverse-geocodes the point to the
+/// nearest Thai subdistrict (offline) and drives the shared controller.
+class _MapPickerDemo extends StatefulWidget {
+  const _MapPickerDemo({required this.controller, required this.language});
+
+  final ThaiAddressController controller;
+  final ThaiAddressLanguage language;
+
+  @override
+  State<_MapPickerDemo> createState() => _MapPickerDemoState();
+}
+
+class _MapPickerDemoState extends State<_MapPickerDemo> {
+  // The last tapped point, used to draw the pin. Null until the first tap.
+  LatLng? _pin;
+
+  // An inline status line: either the matched address or a "no match" hint.
+  String? _status;
+  bool _matched = false;
+
+  bool get _isThai => widget.language == ThaiAddressLanguage.thai;
+
+  void _handleTap(TapPosition _, LatLng point) {
+    // Offline reverse-geocode, bounded to 20 km so an ocean/border tap that is
+    // nowhere near a Thai subdistrict resolves to null instead of mis-filling.
+    final sub = reverseGeocode(point.latitude, point.longitude, maxKm: 20);
+
+    if (sub == null) {
+      // Too far / off-map: never crash, never mis-fill. Leave controller as-is.
+      setState(() {
+        _pin = point;
+        _matched = false;
+        _status =
+            _isThai
+                ? 'ไม่พบพื้นที่ใกล้จุดนี้'
+                : 'No subdistrict near this point';
+      });
+      return;
+    }
+
+    // Found a subdistrict: drop the pin and commit to the SHARED controller.
+    // This notifies every other demo + the readout panel.
+    widget.controller.setFromCodes(subdistrictCode: sub.code);
+
+    final selection = widget.controller.value;
+    setState(() {
+      _pin = point;
+      _matched = true;
+      _status =
+          selection.isEmpty
+              ? (_isThai ? sub.nameTh : sub.nameEn)
+              : selection.format(language: widget.language);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            height: 280,
+            child: FlutterMap(
+              key: const ValueKey('map-pin-map'),
+              options: MapOptions(
+                initialCenter: const LatLng(13.7563, 100.5018),
+                initialZoom: 5.5,
+                minZoom: 4,
+                maxZoom: 18,
+                onTap: _handleTap,
+                // Keep interaction simple and robust inside a scroll view:
+                // pan + pinch/scroll-zoom, no rotation.
+                interactionOptions: const InteractionOptions(
+                  flags:
+                      InteractiveFlag.drag |
+                      InteractiveFlag.flingAnimation |
+                      InteractiveFlag.pinchZoom |
+                      InteractiveFlag.scrollWheelZoom |
+                      InteractiveFlag.doubleTapZoom,
+                ),
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName:
+                      'com.ultramcu.thai_provinces_flutter.example',
+                ),
+                if (_pin != null)
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: _pin!,
+                        width: 40,
+                        height: 40,
+                        alignment: Alignment.topCenter,
+                        child: Icon(
+                          Icons.location_on,
+                          size: 40,
+                          color:
+                              _matched
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.error,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Icon(
+              _pin == null
+                  ? Icons.touch_app_outlined
+                  : (_matched ? Icons.place : Icons.not_listed_location),
+              size: 20,
+              color:
+                  _pin == null
+                      ? theme.colorScheme.onSurfaceVariant
+                      : (_matched
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.error),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _status ??
+                    (_isThai
+                        ? 'แตะบนแผนที่เพื่อค้นหาตำบลที่ใกล้ที่สุด'
+                        : 'Tap the map to find the nearest subdistrict'),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color:
+                      _pin != null && !_matched
+                          ? theme.colorScheme.error
+                          : null,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 /// The persistent live readout, bound to the single shared controller via a
 /// [ValueListenableBuilder] — no setState plumbing across demos.
 class _SelectionPanel extends StatelessWidget {
@@ -488,8 +654,9 @@ class _SelectionPanel extends StatelessWidget {
     return ValueListenableBuilder<ThaiAddressSelection>(
       valueListenable: controller,
       builder: (context, selection, _) {
-        final json =
-            const JsonEncoder.withIndent('  ').convert(selection.toJson());
+        final json = const JsonEncoder.withIndent(
+          '  ',
+        ).convert(selection.toJson());
         return Card(
           elevation: 0,
           color: theme.colorScheme.surfaceContainerHighest,
@@ -517,9 +684,10 @@ class _SelectionPanel extends StatelessWidget {
                             ? (_isThai ? 'ครบถ้วน' : 'Complete')
                             : (_isThai ? 'ยังไม่ครบ' : 'Incomplete'),
                       ),
-                      backgroundColor: selection.isComplete
-                          ? theme.colorScheme.primaryContainer
-                          : theme.colorScheme.errorContainer,
+                      backgroundColor:
+                          selection.isComplete
+                              ? theme.colorScheme.primaryContainer
+                              : theme.colorScheme.errorContainer,
                       visualDensity: VisualDensity.compact,
                     ),
                   ],
@@ -528,18 +696,12 @@ class _SelectionPanel extends StatelessWidget {
                 _row(
                   context,
                   _isThai ? 'จังหวัด' : 'Province',
-                  _name(
-                    selection.province?.nameTh,
-                    selection.province?.nameEn,
-                  ),
+                  _name(selection.province?.nameTh, selection.province?.nameEn),
                 ),
                 _row(
                   context,
                   _isThai ? 'อำเภอ/เขต' : 'District',
-                  _name(
-                    selection.district?.nameTh,
-                    selection.district?.nameEn,
-                  ),
+                  _name(selection.district?.nameTh, selection.district?.nameEn),
                 ),
                 _row(
                   context,
@@ -605,15 +767,12 @@ class _SelectionPanel extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            child: Text(value, style: Theme.of(context).textTheme.bodyMedium),
           ),
         ],
       ),

@@ -4,14 +4,19 @@ publish_to: none
 version: 1.0.0
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
-  flutter: ">=3.0.0"
+  sdk: ">=3.7.0 <4.0.0"
+  flutter: ">=3.27.0"
 
 dependencies:
   flutter:
     sdk: flutter
   thai_provinces_flutter:
     path: ../
+  flutter_map: ^8.3.0
+  # flutter_map 8.x pins latlong2 0.9.x; 0.10.x conflicts. The demo only uses
+  # LatLng, which flutter_map re-exports, so the resolved 0.9.x is fine.
+  latlong2: ^0.9.1
+  thai_provinces_geo: ^0.1.0
 
 dev_dependencies:
   flutter_lints: ^6.0.0
