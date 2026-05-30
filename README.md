@@ -189,9 +189,13 @@ controller.setPostcode(13240); // spans 2 provinces → nothing pinned; use choo
 ## Codes (DOPA geocodes)
 
 Every level carries its official DOPA `code` (province 2-digit, district
-4-digit, subdistrict 6-digit). Store a single integer per level and rebuild the
-selection later with `ThaiAddressSelection.fromCodes` — missing parents are
-derived from the deepest code given. `toCodes()` is the inverse and round-trips.
+4-digit, subdistrict 6-digit) — from the **Department of Provincial
+Administration (กรมการปกครอง, DOPA)** dataset on
+[data.go.th](https://data.go.th/dataset/item_c6d42e1b-3219-47e1-b6b7-dfe914f27910),
+via the [`thai_provinces`](https://pub.dev/packages/thai_provinces) core. Store a
+single integer per level and rebuild the selection later with
+`ThaiAddressSelection.fromCodes` — missing parents are derived from the deepest
+code given. `toCodes()` is the inverse and round-trips.
 
 ```dart
 import 'package:thai_provinces_flutter/thai_provinces_flutter.dart';
