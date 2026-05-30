@@ -16,43 +16,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:thai_provinces_flutter/thai_provinces_flutter.dart';
 
-Widget _wrap(Widget child) =>
-    MaterialApp(home: Scaffold(body: SingleChildScrollView(child: child)));
+Widget _wrap(Widget child) => MaterialApp(
+  home: Scaffold(body: SingleChildScrollView(child: child)),
+);
 
 void main() {
   group('ThaiPostcodeField — autofill a11y', () {
-    testWidgets(
-      'the postcode TextField advertises AutofillHints.postalCode',
-      (tester) async {
-        final controller = ThaiAddressController();
-        addTearDown(controller.dispose);
+    testWidgets('the postcode TextField advertises AutofillHints.postalCode', (
+      tester,
+    ) async {
+      final controller = ThaiAddressController();
+      addTearDown(controller.dispose);
 
-        await tester.pumpWidget(
-          _wrap(ThaiPostcodeField(controller: controller)),
-        );
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(_wrap(ThaiPostcodeField(controller: controller)));
+      await tester.pumpAndSettle();
 
-        // The widget must build and render exactly one editable field.
-        expect(
-          find.byType(TextField),
-          findsOneWidget,
-          reason: 'the postcode field should render a single TextField',
-        );
+      // The widget must build and render exactly one editable field.
+      expect(
+        find.byType(TextField),
+        findsOneWidget,
+        reason: 'the postcode field should render a single TextField',
+      );
 
-        final field = tester.widget<TextField>(find.byType(TextField));
-        expect(
-          field.autofillHints,
-          isNotNull,
-          reason: 'the postcode field must declare autofillHints',
-        );
-        expect(
-          field.autofillHints,
-          contains(AutofillHints.postalCode),
-          reason: 'screen readers / autofill need the postalCode hint so the '
-              'platform can offer a postcode',
-        );
-      },
-    );
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(
+        field.autofillHints,
+        isNotNull,
+        reason: 'the postcode field must declare autofillHints',
+      );
+      expect(
+        field.autofillHints,
+        contains(AutofillHints.postalCode),
+        reason:
+            'screen readers / autofill need the postalCode hint so the '
+            'platform can offer a postcode',
+      );
+    });
   });
 
   group('ThaiAddressAutocompleteField — screen-reader announceable', () {
@@ -84,7 +83,7 @@ void main() {
         final labelText = decoration?.labelText;
         final hasNonEmptyDecorationLabel =
             (labelText != null && labelText.trim().isNotEmpty) ||
-                labelWidget != null;
+            labelWidget != null;
 
         // Path 2: a discoverable semantics label anywhere in the subtree.
         // Probe via the SemanticsLabel matcher; any non-empty label satisfies.
@@ -114,7 +113,8 @@ void main() {
         expect(
           hasNonEmptyDecorationLabel || hasSemanticsLabel,
           isTrue,
-          reason: 'the autocomplete field must be announceable by screen '
+          reason:
+              'the autocomplete field must be announceable by screen '
               'readers: provide a Semantics label or a non-empty decoration '
               'label',
         );

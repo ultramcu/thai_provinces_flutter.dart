@@ -82,6 +82,12 @@ class ThaiAddressPicker extends StatefulWidget {
     this.onChanged,
     this.language = ThaiAddressLanguage.thai,
     this.decoration = const InputDecoration(),
+    this.style,
+    this.dropdownColor,
+    this.borderRadius,
+    this.icon,
+    this.iconEnabledColor,
+    this.menuMaxHeight,
     this.enabled = true,
     this.showPostcode = true,
     this.spacing = 12.0,
@@ -109,6 +115,31 @@ class ThaiAddressPicker extends StatefulWidget {
   /// (see [provinceLabel] etc.) is layered on top via `copyWith` when not
   /// already supplied.
   final InputDecoration decoration;
+
+  /// Text style for the selected item shown in each dropdown's button.
+  /// Forwarded as `DropdownButtonFormField.style`; `null` keeps the default.
+  final TextStyle? style;
+
+  /// Background color of each dropdown's open menu. Forwarded as
+  /// `DropdownButtonFormField.dropdownColor`; `null` keeps the default.
+  final Color? dropdownColor;
+
+  /// Corner radius of each dropdown's open menu. Forwarded as
+  /// `DropdownButtonFormField.borderRadius`; `null` keeps the default.
+  final BorderRadius? borderRadius;
+
+  /// Trailing widget shown for each dropdown (e.g. the down arrow). Forwarded
+  /// as `DropdownButtonFormField.icon`; `null` keeps the default chevron.
+  final Widget? icon;
+
+  /// Color applied to each dropdown's [icon] when the field is enabled.
+  /// Forwarded as `DropdownButtonFormField.iconEnabledColor`; `null` keeps the
+  /// default.
+  final Color? iconEnabledColor;
+
+  /// Maximum height of each dropdown's open menu, in logical pixels. Forwarded
+  /// as `DropdownButtonFormField.menuMaxHeight`; `null` keeps the default.
+  final double? menuMaxHeight;
 
   /// Whether the whole picker is interactive. When `false`, all fields are
   /// disabled regardless of selection state.
@@ -285,6 +316,12 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
                 _defaultProvinceLabel,
               ),
               items: _buildProvinces(),
+              style: widget.style,
+              dropdownColor: widget.dropdownColor,
+              borderRadius: widget.borderRadius,
+              icon: widget.icon,
+              iconEnabledColor: widget.iconEnabledColor,
+              menuMaxHeight: widget.menuMaxHeight,
               onChanged: widget.enabled ? _controller.setProvince : null,
             ),
           ),
@@ -312,6 +349,12 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
                 _defaultDistrictLabel,
               ),
               items: _buildDistricts(selection),
+              style: widget.style,
+              dropdownColor: widget.dropdownColor,
+              borderRadius: widget.borderRadius,
+              icon: widget.icon,
+              iconEnabledColor: widget.iconEnabledColor,
+              menuMaxHeight: widget.menuMaxHeight,
               onChanged: widget.enabled && selection.province != null
                   ? _controller.setDistrict
                   : null,
@@ -342,6 +385,12 @@ class _ThaiAddressPickerState extends State<ThaiAddressPicker> {
                 _defaultSubdistrictLabel,
               ),
               items: _buildSubdistricts(selection),
+              style: widget.style,
+              dropdownColor: widget.dropdownColor,
+              borderRadius: widget.borderRadius,
+              icon: widget.icon,
+              iconEnabledColor: widget.iconEnabledColor,
+              menuMaxHeight: widget.menuMaxHeight,
               onChanged: widget.enabled && selection.district != null
                   ? _controller.setSubdistrict
                   : null,

@@ -50,88 +50,84 @@ const subdistrictKey = Key('thaiAddress.subdistrict');
 
 void main() {
   group('ThaiAddressPicker(fieldBuilder:)', () {
-    testWidgets(
-      'custom province field renders, taps, and drives the cascade',
-      (tester) async {
-        final controller = ThaiAddressController();
-        addTearDown(controller.dispose);
+    testWidgets('custom province field renders, taps, and drives the cascade', (
+      tester,
+    ) async {
+      final controller = ThaiAddressController();
+      addTearDown(controller.dispose);
 
-        // The fieldBuilder supplies a custom widget for the PROVINCE level only
-        // (an ElevatedButton keyed customProvince that, when tapped, selects the
-        // province whose code == 50 via scope.onSelected). For every other
-        // level it returns null, so those keep the default dropdown.
-        var provinceBuildCount = 0;
-        await tester.pumpWidget(
-          _wrap(
-            ThaiAddressPicker(
-              controller: controller,
-              fieldBuilder: (context, scope) {
-                if (scope.level == ThaiAddressLevel.province) {
-                  provinceBuildCount++;
-                  return ElevatedButton(
-                    key: const Key('customProvince'),
-                    onPressed: () => scope.onSelected(
-                      scope.options.firstWhere(
-                        (o) => (o as Province).code == 50,
-                      ),
-                    ),
-                    child: const Text('pick CM'),
-                  );
-                }
-                return null; // default dropdown for district/subdistrict
-              },
-            ),
+      // The fieldBuilder supplies a custom widget for the PROVINCE level only
+      // (an ElevatedButton keyed customProvince that, when tapped, selects the
+      // province whose code == 50 via scope.onSelected). For every other
+      // level it returns null, so those keep the default dropdown.
+      var provinceBuildCount = 0;
+      await tester.pumpWidget(
+        _wrap(
+          ThaiAddressPicker(
+            controller: controller,
+            fieldBuilder: (context, scope) {
+              if (scope.level == ThaiAddressLevel.province) {
+                provinceBuildCount++;
+                return ElevatedButton(
+                  key: const Key('customProvince'),
+                  onPressed: () => scope.onSelected(
+                    scope.options.firstWhere((o) => (o as Province).code == 50),
+                  ),
+                  child: const Text('pick CM'),
+                );
+              }
+              return null; // default dropdown for district/subdistrict
+            },
           ),
-        );
-        await tester.pump();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        // The custom widget must be present (fieldBuilder honoured)...
-        expect(
-          find.byKey(const Key('customProvince')),
-          findsOneWidget,
-          reason: 'fieldBuilder custom province widget should render',
-        );
-        expect(
-          provinceBuildCount,
-          greaterThan(0),
-          reason: 'picker invoked the fieldBuilder for the province level',
-        );
+      // The custom widget must be present (fieldBuilder honoured)...
+      expect(
+        find.byKey(const Key('customProvince')),
+        findsOneWidget,
+        reason: 'fieldBuilder custom province widget should render',
+      );
+      expect(
+        provinceBuildCount,
+        greaterThan(0),
+        reason: 'picker invoked the fieldBuilder for the province level',
+      );
 
-        // ...and the DEFAULT province dropdown must NOT be present (the custom
-        // widget replaces it, it does not render alongside it).
-        expect(
-          find.byKey(provinceKey),
-          findsNothing,
-          reason: 'custom province field replaces the default dropdown',
-        );
+      // ...and the DEFAULT province dropdown must NOT be present (the custom
+      // widget replaces it, it does not render alongside it).
+      expect(
+        find.byKey(provinceKey),
+        findsNothing,
+        reason: 'custom province field replaces the default dropdown',
+      );
 
-        // Levels that returned null keep their default dropdown.
-        expect(
+      // Levels that returned null keep their default dropdown.
+      expect(
+        find.byKey(districtKey),
+        findsOneWidget,
+        reason: 'district returned null -> default dropdown still rendered',
+      );
+      expect(
+        tester.widget<DropdownButtonFormField<District>>(
           find.byKey(districtKey),
-          findsOneWidget,
-          reason: 'district returned null -> default dropdown still rendered',
-        );
-        expect(
-          tester.widget<DropdownButtonFormField<District>>(
-            find.byKey(districtKey),
-          ),
-          isNotNull,
-          reason: 'null-returning level falls back to DropdownButtonFormField',
-        );
+        ),
+        isNotNull,
+        reason: 'null-returning level falls back to DropdownButtonFormField',
+      );
 
-        // Tapping the custom widget commits the selection through onSelected;
-        // the picker must run the cascade into the controller.
-        await tester.tap(find.byKey(const Key('customProvince')));
-        await tester.pumpAndSettle();
+      // Tapping the custom widget commits the selection through onSelected;
+      // the picker must run the cascade into the controller.
+      await tester.tap(find.byKey(const Key('customProvince')));
+      await tester.pumpAndSettle();
 
-        expect(
-          controller.value.province?.code,
-          equals(50),
-          reason:
-              'scope.onSelected wired the cascade -> controller province set',
-        );
-      },
-    );
+      expect(
+        controller.value.province?.code,
+        equals(50),
+        reason: 'scope.onSelected wired the cascade -> controller province set',
+      );
+    });
   });
 
   group('ThaiAddressPicker(labelBuilder:)', () {
@@ -156,14 +152,34 @@ void main() {
         await tester.tap(find.byKey(provinceKey));
         await tester.pumpAndSettle();
 
-        // The Bangkok (code 10) option — laid out in the initial open-menu
-        // viewport — must show the custom label 'X-10' rather than its default
-        // Thai name 'กรุงเทพมหานคร'.
+        // The open menu lists all 77 provinces in a scrollable, and only the
+        // items in the current viewport are laid out — so we must NOT assume any
+        // particular code is on screen at the initial scroll offset (which is
+        // what made this test flaky under full-suite load). Scroll the menu
+        // until the Bangkok (code 10) item is brought into view, then assert on
+        // it. `dragUntilVisible` is a no-op (and still succeeds) when the target
+        // is already visible, so this is robust either way.
+        final menu = find.byType(Scrollable).last;
+        final bangkokOverride = find.text('X-10');
+        await tester.dragUntilVisible(
+          bangkokOverride,
+          menu,
+          const Offset(0, -50),
+        );
+        await tester.pumpAndSettle();
+
+        // The Bangkok province item must show the custom label 'X-10' produced
+        // by the labelBuilder, rather than its default Thai name.
         expect(
-          find.text('X-10'),
+          bangkokOverride,
           findsWidgets,
           reason: 'labelBuilder should override the default province label',
         );
+
+        // The default Thai label for Bangkok must NOT be present anywhere the
+        // override applies. (It only ever exists as an option label, so once the
+        // override is in effect it should appear nowhere — including off-screen,
+        // since the labelBuilder, not the viewport, decides the text.)
         expect(
           find.text('กรุงเทพมหานคร'),
           findsNothing,

@@ -39,7 +39,10 @@ The core models (`Province`, `District`, `Subdistrict`) and lookup helpers (`pro
 | Cascading province → district → subdistrict picker | `ThaiAddressPicker` |
 | Single type-ahead field | `ThaiAddressAutocompleteField` |
 | Postcode reverse-lookup | `ThaiPostcodeField` / `controller.setPostcode` |
-| `Form` validation field | `ThaiAddressFormField` |
+| `Form` validation field | `ThaiAddressFormField` + `ThaiAddressValidators` |
+| Custom per-level fields / labels | `fieldBuilder` / `labelBuilder` |
+| Styling | theme, per-field `decoration`, direct passthrough (`dropdownColor`/`style`/…) |
+| Languages | Thai / English / bilingual (`ThaiAddressLanguage`) |
 | Runtime dependencies | `flutter` + `thai_provinces` only |
 | Code generation | none |
 | State-management lock-in | none (plain `ValueNotifier`) |
@@ -235,9 +238,11 @@ const fromSub = ThaiAddressPicker(initialCodes: (null, null, 500108));
 | `ThaiAddressAutocompleteField` | Widget | Single type-ahead field resolving a free-text name / postcode-prefix query to a full selection. |
 | `ThaiPostcodeField` | Widget | Postcode-first field: 5-digit entry fills the levels the code shares unambiguously, plus an inline subdistrict chooser when several subdistricts match. |
 | `ThaiAddressFormField` | `FormField` | `Form`-integrated picker with `validator` / `onSaved` / error text. |
+| `ThaiAddressValidators` | Helpers | Ready-made `FormField` validators, e.g. `ThaiAddressValidators.required(...)`. |
+| `ThaiAddressFieldScope` / `ThaiAddressLevel` | Builder types | Passed to `fieldBuilder` to render a custom widget per level. |
 | `ThaiAddressController` | `ValueNotifier` | Holds the selection; cascade-clearing, guarded setters (`setProvince` / `setDistrict` / `setSubdistrict` / `setPostcode` / `setFromCodes` / `clear`). |
 | `ThaiAddressSelection` | Value object | Immutable `{province, district, subdistrict}` snapshot; `postcode`, `isComplete`, `isEmpty`, `copyWith`, `fromCodes` / `toCodes`, `toJson` / `fromJson`, value equality. |
-| `ThaiAddressLanguage` | Enum | `thai` or `english` — picks which label names render. |
+| `ThaiAddressLanguage` | Enum | `thai`, `english` or `bilingual` — picks which label names render. |
 | `ThaiAddressLanguageLabels` | Extension | `labelOf` / `labelOfDistrict` / `labelOfSubdistrict` helpers. |
 | `Province`, `District`, `Subdistrict` | Re-exported models | From `thai_provinces`. |
 | `provinces()`, `provinceByCode()`, … | Re-exported helpers | From `thai_provinces`. |
@@ -248,15 +253,133 @@ const fromSub = ThaiAddressPicker(initialCodes: (null, null, 500108));
 - The controller's setters are **guarded**: passing a district/subdistrict that does not belong to the current parent is a no-op in release builds and trips an `assert` in debug builds, so the held selection is never left inconsistent.
 - An external controller you pass in is **never disposed** by the widgets; an internally created one is.
 
-## Language (TH / EN)
+## Language (TH / EN / bilingual)
 
-Set `language: ThaiAddressLanguage.thai` (default) or `ThaiAddressLanguage.english`
-to switch the dropdown option text and the default field labels
-(จังหวัด/อำเภอ-เขต/ตำบล-แขวง/รหัสไปรษณีย์ vs Province/District/Subdistrict/Postcode).
-The *selected values* are language-independent — only the displayed text changes.
-A caller-set `decoration.labelText`, or the per-field `provinceLabel` /
+Set `language:` to one of:
+
+- `ThaiAddressLanguage.thai` (default) — Thai names and default labels
+  (จังหวัด / อำเภอ-เขต / ตำบล-แขวง / รหัสไปรษณีย์).
+- `ThaiAddressLanguage.english` — romanized names and English labels
+  (Province / District / Subdistrict / Postcode).
+- `ThaiAddressLanguage.bilingual` — both, rendered as `"<Thai> (<English>)"`,
+  e.g. `"กรุงเทพมหานคร (Bangkok)"`.
+
+The *selected values* are language-independent — only the displayed text
+changes. A caller-set `decoration.labelText`, or the per-field `provinceLabel` /
 `districtLabel` / `subdistrictLabel` / `postcodeLabel` arguments, override the
 defaults.
+
+```dart
+ThaiAddressPicker(
+  language: ThaiAddressLanguage.bilingual, // "กรุงเทพมหานคร (Bangkok)"
+);
+```
+
+## Validators
+
+`ThaiAddressValidators` gives you ready-made `FormField` validators for a
+`ThaiAddressSelection`, so you don't have to hand-roll the `isComplete` check.
+`required` passes only when the selection has all three levels and otherwise
+returns a message localized to `language` (or your own `message`).
+
+```dart
+ThaiAddressFormField(
+  autovalidateMode: AutovalidateMode.onUserInteraction,
+  // -> "กรุณาเลือกที่อยู่ให้ครบ" (or the EN / bilingual default, or a custom one)
+  validator: ThaiAddressValidators.required(
+    language: ThaiAddressLanguage.thai,
+  ),
+);
+```
+
+## Custom fields & labels
+
+Two hooks on `ThaiAddressPicker` let you change what each level looks like
+without giving up the cascade / clear / postcode logic:
+
+- **`labelBuilder`** overrides just the *text* of each option. It's handed the
+  area model (`Province` / `District` / `Subdistrict`); return the string to
+  show. Return based on `language` yourself, or ignore it entirely.
+- **`fieldBuilder`** is the full escape hatch: return a custom widget for a level
+  (an autocomplete, a Cupertino picker, a bottom-sheet trigger, …) and the
+  picker uses it in place of the default dropdown. Commit a choice by calling
+  `scope.onSelected(option)`; return `null` for a level to keep its default
+  dropdown.
+
+```dart
+ThaiAddressPicker(
+  // Show the DOPA code next to each province name.
+  labelBuilder: (area) =>
+      area is Province ? '${area.nameTh} (${area.code})' : area.toString(),
+
+  // Replace the province level with a button that opens your own UI.
+  fieldBuilder: (context, scope) {
+    if (scope.level != ThaiAddressLevel.province) return null; // keep default
+    return OutlinedButton(
+      onPressed: () async {
+        final picked = await showMyProvinceSheet(context, scope.options);
+        if (picked != null) scope.onSelected(picked); // drives the cascade
+      },
+      child: Text(scope.selected == null ? scope.label : '${scope.selected}'),
+    );
+  },
+);
+```
+
+## Styling & theming
+
+There are three layers, from broadest to most surgical — use whichever fits.
+
+**1. Ambient `ThemeData`.** Every field here is a standard Material widget
+(`DropdownButtonFormField`, `TextField`, `Autocomplete`), so your app theme
+already styles them. `ColorScheme`, `InputDecorationTheme` and `DropdownMenuThemeData`
+all apply with no per-widget code:
+
+```dart
+MaterialApp(
+  theme: ThemeData(
+    useMaterial3: true,
+    colorSchemeSeed: Colors.teal,
+    inputDecorationTheme: const InputDecorationTheme(
+      border: OutlineInputBorder(),
+      filled: true,
+    ),
+  ),
+  home: const AddressForm(), // pickers inherit the teal + outlined look
+);
+```
+
+**2. Per-field `decoration`.** Pass an `InputDecoration` to set borders, icons,
+hints, fill, etc. for this picker only:
+
+```dart
+ThaiAddressPicker(
+  decoration: const InputDecoration(
+    border: OutlineInputBorder(),
+    prefixIcon: Icon(Icons.location_on_outlined),
+  ),
+);
+```
+
+**3. Direct dropdown passthrough.** For the dropdown-specific bits that aren't
+part of `InputDecoration`, `ThaiAddressPicker` and `ThaiPostcodeField` forward
+`style`, `dropdownColor`, `borderRadius`, `icon`, `iconEnabledColor` and
+`menuMaxHeight` straight through to the underlying dropdowns
+(`ThaiAddressAutocompleteField` forwards `style`). Each defaults to `null` /
+the theme:
+
+```dart
+ThaiAddressPicker(
+  dropdownColor: Colors.teal.shade50,
+  borderRadius: BorderRadius.circular(16),
+  style: const TextStyle(fontWeight: FontWeight.w600),
+  icon: const Icon(Icons.expand_more),
+  menuMaxHeight: 320,
+);
+```
+
+For anything beyond these, `fieldBuilder` (above) is the full escape hatch:
+render your own widget for a level and keep the picker's cascade.
 
 ## Screenshots
 

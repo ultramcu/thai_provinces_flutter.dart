@@ -24,6 +24,7 @@ class ThaiAddressAutocompleteField extends StatefulWidget {
     this.onChanged,
     this.language = ThaiAddressLanguage.thai,
     this.decoration = const InputDecoration(),
+    this.style,
     this.enabled = true,
     this.maxOptions = 20,
     this.optionsBuilder,
@@ -42,6 +43,10 @@ class ThaiAddressAutocompleteField extends StatefulWidget {
 
   /// Decoration applied to the text field.
   final InputDecoration decoration;
+
+  /// Text style applied to the input field's editable text. When `null`
+  /// (the default), the ambient theme's text style is used unchanged.
+  final TextStyle? style;
 
   /// Whether the field is interactive.
   final bool enabled;
@@ -221,6 +226,7 @@ class _ThaiAddressAutocompleteFieldState
                 enabled: widget.enabled,
                 autofillHints: const [AutofillHints.fullStreetAddress],
                 decoration: widget.decoration,
+                style: widget.style,
                 onSubmitted: (_) => onFieldSubmitted(),
               ),
             );

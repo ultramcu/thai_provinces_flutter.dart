@@ -24,6 +24,12 @@ class ThaiPostcodeField extends StatefulWidget {
     this.controller,
     this.onChanged,
     this.decoration = const InputDecoration(),
+    this.style,
+    this.dropdownColor,
+    this.borderRadius,
+    this.icon,
+    this.iconEnabledColor,
+    this.menuMaxHeight,
     this.enabled = true,
     this.language = ThaiAddressLanguage.thai,
     this.showSubdistrictChooser = true,
@@ -38,6 +44,30 @@ class ThaiPostcodeField extends StatefulWidget {
 
   /// Decoration applied to the postcode text field.
   final InputDecoration decoration;
+
+  /// Text style for the selected item in the inline subdistrict chooser.
+  /// Forwarded to the chooser's [DropdownButtonFormField.style].
+  final TextStyle? style;
+
+  /// Background color of the inline subdistrict chooser's dropdown menu.
+  /// Forwarded to the chooser's [DropdownButtonFormField.dropdownColor].
+  final Color? dropdownColor;
+
+  /// Corner radius of the inline subdistrict chooser's dropdown menu.
+  /// Forwarded to the chooser's [DropdownButtonFormField.borderRadius].
+  final BorderRadius? borderRadius;
+
+  /// Widget used as the inline subdistrict chooser's drop-down arrow.
+  /// Forwarded to the chooser's [DropdownButtonFormField.icon].
+  final Widget? icon;
+
+  /// Color of the inline subdistrict chooser's drop-down arrow when enabled.
+  /// Forwarded to the chooser's [DropdownButtonFormField.iconEnabledColor].
+  final Color? iconEnabledColor;
+
+  /// Maximum height of the inline subdistrict chooser's dropdown menu.
+  /// Forwarded to the chooser's [DropdownButtonFormField.menuMaxHeight].
+  final double? menuMaxHeight;
 
   /// Whether the field is interactive.
   final bool enabled;
@@ -266,6 +296,12 @@ class _ThaiPostcodeFieldState extends State<ThaiPostcodeField> {
       initialValue: selection.subdistrict,
       isExpanded: true,
       decoration: InputDecoration(labelText: _defaultSubdistrictLabel),
+      style: widget.style,
+      dropdownColor: widget.dropdownColor,
+      borderRadius: widget.borderRadius,
+      icon: widget.icon,
+      iconEnabledColor: widget.iconEnabledColor,
+      menuMaxHeight: widget.menuMaxHeight,
       items: [
         for (final s in candidates)
           DropdownMenuItem<Subdistrict>(

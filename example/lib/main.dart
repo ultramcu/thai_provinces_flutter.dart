@@ -189,6 +189,24 @@ class GalleryHome extends StatelessWidget {
                   'shares the same controller, so the other demos pre-fill it.',
               child: _FormDemo(controller: controller, language: language),
             ),
+            _DemoCard(
+              index: 6,
+              title: _isThai ? 'ปรับแต่งสไตล์' : 'Styled passthrough',
+              description: 'The same ThaiAddressPicker with the direct styling '
+                  'passthrough: a teal dropdownColor, a rounded borderRadius, a '
+                  'bold selected-item style and a custom expand icon — no '
+                  'fieldBuilder needed.',
+              child: ThaiAddressPicker(
+                controller: controller,
+                language: language,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+                dropdownColor: Colors.teal.shade50,
+                borderRadius: BorderRadius.circular(16),
+                style: const TextStyle(fontWeight: FontWeight.w600),
+                icon: const Icon(Icons.expand_more),
+                menuMaxHeight: 320,
+              ),
+            ),
           ];
 
           // A Column inside a SingleChildScrollView mounts every demo eagerly

@@ -1,3 +1,41 @@
+## 0.4.0
+
+- Add `ThaiAddressPicker(fieldBuilder:)` — an escape hatch that lets you render a
+  fully custom widget for any level (province / district / subdistrict) instead
+  of the default dropdown, while the picker keeps owning the cascade, the
+  clear-on-parent-change behaviour and the auto-filled postcode. The builder
+  receives a `ThaiAddressFieldScope` (`level`, `options`, `selected`,
+  `onSelected`, `enabled`, `label`); return `null` for a level to keep its
+  default dropdown. New public types: `ThaiAddressLevel`, `ThaiAddressFieldScope`
+  and the `ThaiAddressFieldBuilder` typedef.
+- Add `ThaiAddressPicker(labelBuilder:)` — override the display label of any area
+  option (`Province` / `District` / `Subdistrict`) without touching the
+  selection. Falls back to the `language` default when `null`. New
+  `ThaiAddressLabelBuilder` typedef.
+- Add `ThaiAddressValidators` — ready-made `FormField` validators for a
+  `ThaiAddressSelection`. `ThaiAddressValidators.required({language, message})`
+  passes only for a complete selection and emits a default message localized to
+  the chosen language (Thai / English / bilingual), or a custom `message`.
+- Add `ThaiAddressLanguage.bilingual` — renders each label as `"<Thai> (<English>)"`
+  (e.g. `"กรุงเทพมหานคร (Bangkok)"`) across the dropdowns, autocomplete, postcode
+  chooser and the default validator message.
+- Add **direct dropdown styling passthrough**. `ThaiAddressPicker` and
+  `ThaiPostcodeField` now forward `style`, `dropdownColor`, `borderRadius`,
+  `icon`, `iconEnabledColor` and `menuMaxHeight` straight to the underlying
+  `DropdownButtonFormField`s; `ThaiAddressAutocompleteField` forwards `style` to
+  its input field. Each is `null` by default and falls back to the ambient
+  theme, so existing call sites are unaffected. This complements the two styling
+  layers that already worked — the ambient `ThemeData` (`ColorScheme` /
+  `InputDecorationTheme` / `dropdownMenuTheme`) and per-field
+  `decoration: InputDecoration(...)` — see the README "Styling & theming"
+  section.
+- Accessibility coverage: tests assert the postcode field advertises
+  `AutofillHints.postalCode` and that the dropdowns expose their labels to the
+  semantics tree.
+- Docs: new README sections for `fieldBuilder`, `labelBuilder`,
+  `ThaiAddressValidators`, the bilingual language mode and a "Styling & theming"
+  guide.
+
 ## 0.3.0
 
 - Add `ThaiAddressSelection.format({language, includePostcode})` — a one-call

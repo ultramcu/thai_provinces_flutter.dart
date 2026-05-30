@@ -17,8 +17,7 @@ void main() {
 
     test('incomplete selection -> non-null Thai message', () {
       final validator = ThaiAddressValidators.required();
-      final incomplete =
-          ThaiAddressSelection.fromCodes(provinceCode: 50);
+      final incomplete = ThaiAddressSelection.fromCodes(provinceCode: 50);
       final result = validator(incomplete);
       expect(result, isNotNull);
       expect(result, 'กรุณาเลือกที่อยู่ให้ครบ');
@@ -26,8 +25,7 @@ void main() {
 
     test('complete selection -> null (valid)', () {
       final validator = ThaiAddressValidators.required();
-      final complete =
-          ThaiAddressSelection.fromCodes(subdistrictCode: 500108);
+      final complete = ThaiAddressSelection.fromCodes(subdistrictCode: 500108);
       expect(validator(complete), isNull);
     });
 
