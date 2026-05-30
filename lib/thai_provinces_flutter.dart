@@ -33,6 +33,8 @@ export 'src/picker.dart'
         ThaiAddressLabelBuilder;
 export 'src/postcode_field.dart' show ThaiPostcodeField;
 export 'src/selection.dart' show ThaiAddressSelection;
+export 'src/sheet.dart' show showThaiAddressSheet;
+export 'src/sheet_field.dart' show ThaiAddressSheetField;
 export 'src/suggestions.dart'
     show ThaiAddressSuggestion, thaiAddressSuggestions;
 export 'src/validators.dart' show ThaiAddressValidators;

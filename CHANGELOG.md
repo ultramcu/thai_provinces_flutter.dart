@@ -1,3 +1,16 @@
+## 0.5.0
+
+- Add `ThaiAddressSheetField` — a compact, single-line address field for dense
+  forms (checkout etc.): it shows the current selection as one read-only summary
+  line (via `ThaiAddressSelection.format`) and, when tapped, opens a modal
+  bottom-sheet picker; confirming commits the new selection to the controller,
+  cancelling leaves it untouched.
+- Add `showThaiAddressSheet(context, {initial, language, title, confirmLabel})`
+  — the imperative bottom-sheet picker behind the field, usable on its own;
+  returns the chosen `ThaiAddressSelection` on confirm or `null` on cancel. It
+  edits a private staging controller, so a cancelled edit never mutates the
+  caller's state. Built on stock `showModalBottomSheet`; no new dependencies.
+
 ## 0.4.0
 
 - Add `ThaiAddressPicker(fieldBuilder:)` — an escape hatch that lets you render a
