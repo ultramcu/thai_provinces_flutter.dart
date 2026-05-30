@@ -39,6 +39,7 @@ The core models (`Province`, `District`, `Subdistrict`) and lookup helpers (`pro
 | Cascading province → district → subdistrict picker | `ThaiAddressPicker` |
 | Single type-ahead field | `ThaiAddressAutocompleteField` |
 | Postcode reverse-lookup | `ThaiPostcodeField` / `controller.setPostcode` |
+| Paste-and-confirm free-text address | `ThaiAddressPasteField` |
 | `Form` validation field | `ThaiAddressFormField` + `ThaiAddressValidators` |
 | Custom per-level fields / labels | `fieldBuilder` / `labelBuilder` |
 | Styling | theme, per-field `decoration`, direct passthrough (`dropdownColor`/`style`/…) |
@@ -186,6 +187,46 @@ controller.setPostcode(50200); // 1 district, 3 subdistricts → province+distri
 controller.setPostcode(13240); // spans 2 provinces → nothing pinned; use chooser
 ```
 
+## Paste address (paste-and-confirm free text)
+
+`ThaiAddressPasteField` is for the "I already have the whole address as one blob
+of text" case: the user pastes (or types) a free-text Thai address, the field
+parses it live and shows a non-committal **preview** of what it recognised, and
+only a deliberate tap on confirm writes the result into the controller. The core
+guarantee is that **the shared controller is never mutated until the user
+confirms** — typing and pasting only update the local preview, so it is safe to
+drop next to other fields sharing the same `ThaiAddressController` without
+thrashing their selection mid-edit. Confirm is enabled only once the parse
+resolved at least a province (a bare ambiguous postcode stays disabled).
+
+`onChanged` reports the committed `ThaiAddressSelection?` exactly like the other
+fields. `onParsed` hands you the full `ThaiAddressParseResult` on confirm,
+including the `remainder` (house number, road, … that a selection does not carry)
+and the parser-reported `postcode`.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:thai_provinces_flutter/thai_provinces_flutter.dart';
+
+class AddressPaste extends StatelessWidget {
+  const AddressPaste({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ThaiAddressPasteField(
+      // Live preview while typing/pasting; nothing commits until confirm.
+      onParsed: (result) => debugPrint(
+        'leftover: ${result.remainder} postcode: ${result.postcode}',
+      ),
+      onChanged: (sel) => debugPrint('committed: ${sel?.postcode}'),
+    );
+  }
+}
+```
+
+> This widget needs the `thai_provinces` core's `parseThaiAddress`, added in
+> core `^0.3.0`.
+
 ## Codes (DOPA geocodes)
 
 Every level carries its official DOPA `code` (province 2-digit, district
@@ -241,6 +282,7 @@ const fromSub = ThaiAddressPicker(initialCodes: (null, null, 500108));
 | `ThaiAddressPicker` | Widget | Cascading province/district/subdistrict dropdowns + read-only postcode. Optional `initialCodes` seed. |
 | `ThaiAddressAutocompleteField` | Widget | Single type-ahead field resolving a free-text name / postcode-prefix query to a full selection. |
 | `ThaiPostcodeField` | Widget | Postcode-first field: 5-digit entry fills the levels the code shares unambiguously, plus an inline subdistrict chooser when several subdistricts match. |
+| `ThaiAddressPasteField` | Widget | Paste/type a free-text Thai address; live `parseThaiAddress` preview; commits to the controller only on a deliberate confirm. `onParsed` exposes the full `ThaiAddressParseResult` (remainder/postcode). Needs core `^0.3.0`. |
 | `ThaiAddressFormField` | `FormField` | `Form`-integrated picker with `validator` / `onSaved` / error text. |
 | `ThaiAddressValidators` | Helpers | Ready-made `FormField` validators, e.g. `ThaiAddressValidators.required(...)`. |
 | `ThaiAddressFieldScope` / `ThaiAddressLevel` | Builder types | Passed to `fieldBuilder` to render a custom widget per level. |

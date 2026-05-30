@@ -24,6 +24,7 @@ export 'src/autocomplete_field.dart' show ThaiAddressAutocompleteField;
 export 'src/controller.dart' show ThaiAddressController;
 export 'src/form_field.dart' show ThaiAddressFormField;
 export 'src/language.dart' show ThaiAddressLanguage, ThaiAddressLanguageLabels;
+export 'src/paste_field.dart' show ThaiAddressPasteField;
 export 'src/picker.dart'
     show
         ThaiAddressPicker,

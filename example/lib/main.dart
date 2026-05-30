@@ -256,6 +256,15 @@ class GalleryHome extends StatelessWidget {
                   'the readout and every other demo update in sync.',
               child: _MapPickerDemo(controller: controller, language: language),
             ),
+            _DemoCard(
+              index: 10,
+              title: _isThai ? 'วางที่อยู่' : 'Paste address',
+              description:
+                  'ThaiAddressPasteField — paste a free-text Thai address; it '
+                  'parses live and previews what it recognised, and only a tap '
+                  'on confirm commits to the shared controller (never before).',
+              child: _PasteDemo(controller: controller, language: language),
+            ),
           ];
 
           // A Column inside a SingleChildScrollView mounts every demo eagerly
@@ -628,6 +637,72 @@ class _MapPickerDemoState extends State<_MapPickerDemo> {
             ),
           ],
         ),
+      ],
+    );
+  }
+}
+
+/// Demo (10): paste-and-confirm. The field commits to the shared controller
+/// only on confirm; `onParsed` also surfaces the free-text leftover (house
+/// number / road) and the parser-reported postcode that a selection cannot
+/// carry, shown in a status line below the field.
+class _PasteDemo extends StatefulWidget {
+  const _PasteDemo({required this.controller, required this.language});
+
+  final ThaiAddressController controller;
+  final ThaiAddressLanguage language;
+
+  @override
+  State<_PasteDemo> createState() => _PasteDemoState();
+}
+
+class _PasteDemoState extends State<_PasteDemo> {
+  // The last confirmed parse, used to surface the remainder/postcode that the
+  // committed selection does not carry. Null until the first confirm.
+  ThaiAddressParseResult? _parsed;
+
+  bool get _isThai => widget.language == ThaiAddressLanguage.thai;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final parsed = _parsed;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ThaiAddressPasteField(
+          controller: widget.controller,
+          language: widget.language,
+          // Capture the full parse on confirm so we can show what the committed
+          // selection drops: the leftover free text and the raw postcode.
+          onParsed: (result) => setState(() => _parsed = result),
+        ),
+        if (parsed != null) ...[
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.fact_check_outlined,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  parsed.remainder.isEmpty
+                      ? (_isThai
+                          ? 'ยืนยันแล้ว — ไม่มีข้อความที่อยู่เหลือ'
+                          : 'Confirmed — no leftover address text')
+                      : '${_isThai ? 'บ้านเลขที่/ถนน' : 'House/road'}: '
+                          '${parsed.remainder}'
+                          '${parsed.postcode != null ? ' · ${_isThai ? 'รหัสไปรษณีย์' : 'Postcode'} ${parsed.postcode}' : ''}',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

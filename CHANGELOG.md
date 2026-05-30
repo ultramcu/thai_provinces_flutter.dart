@@ -1,3 +1,17 @@
+## 0.7.0
+
+- Add **`ThaiAddressPasteField`** — a paste-and-confirm free-text address field:
+  the user pastes (or types) a free-text Thai address, the field parses it live
+  with the core's `parseThaiAddress` and shows a non-committal **preview** of
+  what it recognised, and only a deliberate tap on confirm writes the result
+  into the `ThaiAddressController`. The shared controller is never mutated until
+  confirm — safe to drop next to other fields without thrashing their selection.
+  `onParsed` reports the full `ThaiAddressParseResult` (incl. the house/road
+  `remainder` and postcode); `onChanged` reports the committed
+  `ThaiAddressSelection?`.
+- Requires the [`thai_provinces`](https://pub.dev/packages/thai_provinces) core
+  `^0.3.0` (for `parseThaiAddress`).
+
 ## 0.6.1
 
 - Docs: cite the source dataset — the Department of Provincial Administration
